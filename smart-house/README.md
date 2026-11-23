@@ -54,7 +54,7 @@ Scripts read the model's `Scale` attribute (1 today) and multiply their distance
 
 ## Setup
 
-1. Open the place in Roblox Studio.
+1. Open `smart-house.rbxl` in Roblox Studio (it has the whole build: the house, the cave and every script).
 2. Set the codes: select **ServerStorage**, then under **Attributes** set `AlarmCode` and `VaultCode` (strings; the vault code must be 4 digits). If one is missing, the game picks a random code and prints it in the Output window. The vault clues always show the current vault code.
 3. To sync code edits from this repo, use [Rojo](https://rojo.space) with `default.project.json`, or paste a file into the matching script.
 
