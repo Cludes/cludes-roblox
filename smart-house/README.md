@@ -1,6 +1,6 @@
 # Smart House (Roblox)
 
-A raised, double-size modern smart house with an underground bat-cave, built for an IT and cyber security mentoring challenge. Every system is scripted and server-authoritative.
+A raised modern smart house with a back wing of extra rooms and an underground bat-cave, built for an IT and cyber security mentoring challenge. Every system is scripted and server-authoritative.
 
 ## What is in it
 
@@ -10,7 +10,8 @@ A raised, double-size modern smart house with an underground bat-cave, built for
 | **Garage** | A four-panel sectional door that rolls up a curved track onto the ceiling. Opens in 4 s, closes slowly in 9 s, status lamps (red, flashing orange, green), a safety beam that reverses the door if someone is underneath, auto-close after 45 s |
 | **Security** | Keypads with Away and Stay arming, 15 s exit and entry delays, motion sensors in every room, sirens, strobes, a forced-door alarm, lockdown, a panic button, five CCTV cameras you can view, and a live security log |
 | **Defences** | When the alarm goes off, every room fills with fire that burns intruders. The vault lasers kill intruders. Players who have entered a correct code are the owners and are never hurt. Guarded kill switches turn every trap off, and a purge button sets them all off on purpose |
-| **Hidden ways in** | Pull the odd red book (bookcase to the security room), inspect the painting (attic ladder to the hidden server room), pull the clock's pendulum (secret elevator to the cave), tilt the bust's head (the fireplace slides away and a bat-pole drops you into the cave) |
+| **Hidden ways in** | Pull the odd red book (bookcase to the security room), inspect the painting (attic ladder to the hidden server room), pull the clock's pendulum (secret elevator to the cave), tilt the bust's head (the fireplace slides away and a bat-pole drops you into the cave), spin the library globe (a bookshelf slides aside to the panic room) |
+| **Back wing** | Downstairs: a home cinema with tiered seats and a film on the screen, a gym, and an indoor pool you can swim in. Upstairs: a library with a rolling ladder, a guest suite opening onto the extended roof terrace, and the hidden panic room |
 | **The cave** | Reached by a ramp, the elevator or the bat-pole: a giant status screen, a car on a turntable, a suit display, a waterfall, a console, and a hand scanner that opens a hidden rock door |
 | **The vault** | Behind the rock door: a moving laser corridor, then a round vault door with its own code. The four digits are on sticky notes hidden around the house. Inside: a giant coin, a giant card, a gadget wall, a bike and the flag |
 | **Bat-signal** | A searchlight on the roof that throws the emblem into the sky, switched from the control panel |
@@ -49,7 +50,7 @@ src/client/   StarterPlayerScripts.SmartHouseClient (keypad, control panel, CCTV
 
 The scripts expect the `SmartHouse` model and the `SmartHouseRemotes` folder that are in the place file. This folder holds the code. The parts live in the place.
 
-The house was built at scale 1 and scaled up with `Model:ScaleTo(2)`. Scripts read the model's `Scale` attribute and multiply their distances by it, so the house can be resized again.
+Scripts read the model's `Scale` attribute (1 today) and multiply their distances by it, so the whole house can be resized with `Model:ScaleTo()` without breaking the doors, garage or elevator.
 
 ## Setup
 
