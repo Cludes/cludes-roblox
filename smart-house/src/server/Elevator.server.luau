@@ -30,14 +30,14 @@ local function slider(part, offset)
 end
 
 local doors = {
-	House = { slider(el:WaitForChild("DoorHouseL"), Vector3.new(-2, 0, 0)), slider(el:WaitForChild("DoorHouseR"), Vector3.new(2, 0, 0)) },
-	Cave = { slider(el:WaitForChild("DoorCaveL"), Vector3.new(-2, 0, 0)), slider(el:WaitForChild("DoorCaveR"), Vector3.new(2, 0, 0)) },
+	House = { slider(el:WaitForChild("DoorHouseL"), Vector3.new(-2, 0, 0) * Core.S), slider(el:WaitForChild("DoorHouseR"), Vector3.new(2, 0, 0) * Core.S) },
+	Cave = { slider(el:WaitForChild("DoorCaveL"), Vector3.new(-2, 0, 0) * Core.S), slider(el:WaitForChild("DoorCaveR"), Vector3.new(2, 0, 0) * Core.S) },
 }
 local function setDoors(level, open)
 	for _, f in doors[level] do f(open) end
 end
 
-local moveClock = slider(clock, Vector3.new(-4.4, 0, 0))
+local moveClock = slider(clock, Vector3.new(-4.4, 0, 0) * Core.S)
 local clockOpen, clockToken = false, 0
 local function setClock(open)
 	if clockOpen == open then return end

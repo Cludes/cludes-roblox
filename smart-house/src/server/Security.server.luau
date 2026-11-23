@@ -12,7 +12,7 @@ local remotes = Core.Remotes
 
 local EXIT_DELAY, ENTRY_DELAY, SIREN_MAX = 15, 15, 90
 local MAX_FAILS, LOCKOUT = 3, 30
-local PERIMETER = { Cave = true } -- still watched in Stay mode
+local PERIMETER = { Cave = true, Vault = true } -- still watched in Stay mode
 
 local console = cave:WaitForChild("ConsoleDesk")
 CS:AddTag(console, "Keypad")
@@ -156,14 +156,23 @@ end)
 -- keypad (server side checks: proximity, rate limit, lockout, code)
 local function atKeypad(player)
 	for _, k in keypads do
-		if Core.near(player, k, 12) then return true end
+		if Core.near(player, k, 12 * Core.S) then return true end
 	end
 	return false
 end
 
 remotes.Keypad.OnServerEvent:Connect(function(player, code, action)
 	if typeof(code) ~= "string" or typeof(action) ~= "string" or #code > 8 then return end
-	if not atKeypad(player) then return end
+	local vault = action == "Vault"
+	if vault then
+		local close = false
+		for _, k in CS:GetTagged("VaultKeypad") do
+			if Core.near(player, k, 10 * Core.S) then close = true end
+		end
+		if not close then return end
+	elseif not atKeypad(player) then
+		return
+	end
 	local now = os.clock()
 	if now - (lastKey[player] or 0) < 0.5 then return end
 	lastKey[player] = now
@@ -173,7 +182,7 @@ remotes.Keypad.OnServerEvent:Connect(function(player, code, action)
 		reply("LOCKED OUT " .. math.ceil(lockedUntil[player] - now) .. "s", false)
 		return
 	end
-	if code ~= Core.CODE then
+	if code ~= (vault and Core.VAULT_CODE or Core.CODE) then
 		fails[player] = (fails[player] or 0) + 1
 		failedTotal += 1
 		Core.set("FailedLogins", failedTotal)
@@ -191,6 +200,12 @@ remotes.Keypad.OnServerEvent:Connect(function(player, code, action)
 	end
 
 	fails[player] = 0
+	Core.authorize(player)
+	if vault then
+		Core.call("vault_open", player.Name)
+		reply("ACCESS GRANTED", true)
+		return
+	end
 	local s = Core.get("Security")
 	if action == "Disarm" then
 		if s == "Disarmed" and not Core.get("Lockdown") then
@@ -229,6 +244,8 @@ local ACTIONS = {
 	lockdown = function(p) lockdown(p.Name, false) end,
 	day = function() Core.call("time_set", 12) end,
 	night = function() Core.call("time_set", 21) end,
+	batsignal = function(p) Core.call("batsignal", p.Name) end,
+	lasers = function(p) Core.call("lasers_toggle", p.Name) end,
 	cameras = function(p) remotes.Open:FireClient(p, "cameras") end,
 	keypad = function(p) remotes.Open:FireClient(p, "keypad") end,
 }
@@ -239,7 +256,7 @@ remotes.Panel.OnServerEvent:Connect(function(player, action)
 	if not fn then return end
 	local close = false
 	for _, cp in controlPoints do
-		if Core.near(player, cp, 14) then close = true break end
+		if Core.near(player, cp, 14 * Core.S) then close = true break end
 	end
 	if not close then return end
 	local now = os.clock()
@@ -250,6 +267,7 @@ end)
 
 Players.PlayerRemoving:Connect(function(p)
 	fails[p], lockedUntil[p], lastKey[p], lastPanel[p] = nil, nil, nil, nil
+	Core.Authorized[p] = nil
 end)
 
 -- prompts

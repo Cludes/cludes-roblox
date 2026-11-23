@@ -16,10 +16,12 @@ end
 Core.Handlers = {}
 Core.LogLines = {}
 Core.LogChanged = Instance.new("BindableEvent")
+Core.S = Core.House:GetAttribute("Scale") or 1 -- the house can be scaled; distances scale with it
+Core.Authorized = {} -- players who entered a correct code this session (the owners)
 
 -- defaults (attributes replicate, so clients and screens can read them)
 local defaults = { Security = "Disarmed", ArmMode = "Away", Countdown = 0, Garage = "Closed",
-	DoorLocked = false, DoorOpen = false, Lockdown = false, FailedLogins = 0 }
+	DoorLocked = false, DoorOpen = false, Lockdown = false, FailedLogins = 0, Defences = true, BatSignal = false }
 for k, v in defaults do Core.House:SetAttribute(k, v) end
 
 function Core.clock()
@@ -53,12 +55,16 @@ end
 function Core.get(k) return Core.House:GetAttribute(k) end
 function Core.set(k, v) Core.House:SetAttribute(k, v) end
 
+function Core.authorize(player) Core.Authorized[player] = true end
+-- traps only hurt players who have not proved they own the house
+function Core.lethal(player) return Core.get("Defences") == true and not Core.Authorized[player] end
+
 function Core.prompt(part, action, object, hold, dist)
 	local p = Instance.new("ProximityPrompt")
 	p.ActionText = action
 	p.ObjectText = object or ""
 	p.HoldDuration = hold or 0
-	p.MaxActivationDistance = dist or 8
+	p.MaxActivationDistance = (dist or 8) * Core.S
 	p.Parent = part
 	return p
 end

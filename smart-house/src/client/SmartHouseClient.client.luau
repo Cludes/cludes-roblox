@@ -42,11 +42,11 @@ local function window(title, w, h)
 	local f = new("Frame", { Size = UDim2.fromOffset(w, h), Position = UDim2.new(0.5, -w / 2, 0.5, -h / 2), BackgroundColor3 = C.bg, Visible = false, Parent = gui })
 	corner(f, 12)
 	stroke(f, C.accent, 2)
-	new("TextLabel", { Size = UDim2.new(1, -50, 0, 40), Position = UDim2.fromOffset(16, 6), BackgroundTransparency = 1, Text = title,
+	local titleLbl = new("TextLabel", { Size = UDim2.new(1, -50, 0, 40), Position = UDim2.fromOffset(16, 6), BackgroundTransparency = 1, Text = title,
 		TextColor3 = C.accent, Font = Enum.Font.GothamBlack, TextSize = 18, TextXAlignment = Enum.TextXAlignment.Left, Parent = f })
 	local x = button(f, "X", C.bad, UDim2.fromOffset(32, 32), UDim2.new(1, -42, 0, 10))
 	x.Activated:Connect(function() f.Visible = false end)
-	return f
+	return f, titleLbl
 end
 
 ---------------- notifications ----------------
@@ -72,7 +72,7 @@ local banner = new("TextLabel", { Size = UDim2.fromOffset(380, 46), Position = U
 corner(banner)
 
 ---------------- keypad ----------------
-local keypad = window("SECURITY KEYPAD", 310, 470)
+local keypad, keypadTitle = window("SECURITY KEYPAD", 310, 470)
 local display = new("TextLabel", { Size = UDim2.new(1, -32, 0, 56), Position = UDim2.fromOffset(16, 50), BackgroundColor3 = Color3.fromRGB(6, 10, 16),
 	Text = "ENTER CODE", TextColor3 = C.text, Font = Enum.Font.Code, TextSize = 26, Parent = keypad })
 corner(display, 6)
@@ -100,9 +100,22 @@ local function send(action)
 	entered = ""
 	display.Text = "..."
 end
-button(keypad, "AWAY", C.warn, UDim2.fromOffset(84, 44), UDim2.fromOffset(18, 372)).Activated:Connect(function() send("Away") end)
-button(keypad, "STAY", C.accent, UDim2.fromOffset(84, 44), UDim2.fromOffset(110, 372)).Activated:Connect(function() send("Stay") end)
-button(keypad, "DISARM", C.ok, UDim2.fromOffset(84, 44), UDim2.fromOffset(202, 372)).Activated:Connect(function() send("Disarm") end)
+local modeButtons = {
+	button(keypad, "AWAY", C.warn, UDim2.fromOffset(84, 44), UDim2.fromOffset(18, 372)),
+	button(keypad, "STAY", C.accent, UDim2.fromOffset(84, 44), UDim2.fromOffset(110, 372)),
+	button(keypad, "DISARM", C.ok, UDim2.fromOffset(84, 44), UDim2.fromOffset(202, 372)),
+}
+modeButtons[1].Activated:Connect(function() send("Away") end)
+modeButtons[2].Activated:Connect(function() send("Stay") end)
+modeButtons[3].Activated:Connect(function() send("Disarm") end)
+local openBtn = button(keypad, "OPEN VAULT", C.ok, UDim2.fromOffset(268, 44), UDim2.fromOffset(18, 372))
+openBtn.Activated:Connect(function() send("Vault") end)
+local function setMode(vault)
+	keypadTitle.Text = vault and "VAULT ACCESS" or "SECURITY KEYPAD"
+	for _, b in modeButtons do b.Visible = not vault end
+	openBtn.Visible = vault
+end
+setMode(false)
 new("TextLabel", { Size = UDim2.new(1, -32, 0, 30), Position = UDim2.fromOffset(16, 424), BackgroundTransparency = 1, TextWrapped = true,
 	Text = "Away: watches every room.  Stay: only the cave and doors.", TextColor3 = C.dim, Font = Enum.Font.Gotham, TextSize = 12, Parent = keypad })
 remotes.Keypad.OnClientEvent:Connect(function(kind, msg, ok)
@@ -117,7 +130,7 @@ local DIGITS = { [Enum.KeyCode.Zero] = "0", [Enum.KeyCode.One] = "1", [Enum.KeyC
 	[Enum.KeyCode.KeypadFive] = "5", [Enum.KeyCode.KeypadSix] = "6", [Enum.KeyCode.KeypadSeven] = "7", [Enum.KeyCode.KeypadEight] = "8", [Enum.KeyCode.KeypadNine] = "9" }
 
 ---------------- control panel ----------------
-local panelF = window("SMART HOME CONTROL", 440, 470)
+local panelF = window("SMART HOME CONTROL", 440, 532)
 local status = new("TextLabel", { Size = UDim2.new(1, -32, 0, 86), Position = UDim2.fromOffset(16, 48), BackgroundColor3 = Color3.fromRGB(6, 10, 16),
 	Text = "", TextColor3 = C.text, Font = Enum.Font.Code, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left,
 	TextYAlignment = Enum.TextYAlignment.Top, Parent = panelF })
@@ -129,6 +142,7 @@ local ACTIONS = {
 	{ "Lock / Unlock Door", "door", C.panel }, { "LOCKDOWN", "lockdown", C.bad },
 	{ "Daytime", "day", Color3.fromRGB(190, 140, 30) }, { "Night", "night", Color3.fromRGB(40, 50, 110) },
 	{ "Cameras", "cameras", C.accent }, { "Security Keypad", "keypad", C.ok },
+	{ "Bat-Signal", "batsignal", Color3.fromRGB(200, 170, 30) }, { "Lasers On / Off", "lasers", Color3.fromRGB(170, 30, 40) },
 }
 for i, a in ACTIONS do
 	local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
@@ -189,7 +203,8 @@ remotes.Open.OnClientEvent:Connect(function(which)
 	keypad.Visible, panelF.Visible = false, false
 	local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	openedAt = root and root.Position
-	if which == "keypad" then
+	if which == "keypad" or which == "vault" then
+		setMode(which == "vault")
 		entered = ""
 		showEntry()
 		keypad.Visible = true
@@ -250,7 +265,7 @@ RunService.RenderStepped:Connect(function()
 	-- close windows if the player walks away
 	if openedAt and (keypad.Visible or panelF.Visible) then
 		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-		if not root or (root.Position - openedAt).Magnitude > 16 then
+		if not root or (root.Position - openedAt).Magnitude > 16 * (house:GetAttribute("Scale") or 1) then
 			keypad.Visible, panelF.Visible = false, false
 		end
 	end

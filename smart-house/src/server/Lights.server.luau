@@ -8,7 +8,7 @@ local Core = require(script.Parent:WaitForChild("HouseCore"))
 
 local DAY_MINUTES = 8 -- one full day lasts this many real minutes
 local OFF = Color3.fromRGB(235, 233, 226)
-local HIDDEN = { Secret = true, Attic = true } -- "all lights" never reveals the hidden rooms
+local HIDDEN = { Secret = true, Attic = true, Vault = true } -- "all lights" never reveals the hidden rooms
 
 local lights = {}
 for _, p in CS:GetTagged("SmartLight") do
@@ -82,7 +82,7 @@ while true do
 	for p, d in lights do
 		i += 1
 		if d.room == "Exterior" then
-			paint(p, forceExterior or (night and (not d.motion or someoneNear(p, 30))))
+			paint(p, forceExterior or (night and (not d.motion or someoneNear(p, 30 * Core.S))))
 		elseif mode == "Alarm" then
 			paint(p, flashOn, Color3.fromRGB(255, 30, 30))
 		elseif mode == "Party" then

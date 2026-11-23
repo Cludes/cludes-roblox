@@ -11,7 +11,7 @@ for _, c in door:GetDescendants() do
 end
 local v = Instance.new("NumberValue")
 v.Changed:Connect(function(t)
-	local cf = closed + Vector3.new(0, 0, -5) * t
+	local cf = closed + Vector3.new(0, 0, -5) * Core.S * t
 	door.CFrame = cf
 	for _, d in decor do d.part.CFrame = cf * d.offset end
 end)
@@ -21,7 +21,7 @@ while true do
 	local near = false
 	for _, plr in Players:GetPlayers() do
 		local root = Core.rootOf(plr)
-		if root and (root.Position - closed.Position).Magnitude < 8 then near = true break end
+		if root and (root.Position - closed.Position).Magnitude < 8 * Core.S then near = true break end
 	end
 	if near ~= open then
 		open = near

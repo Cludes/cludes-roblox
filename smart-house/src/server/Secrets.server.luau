@@ -49,7 +49,7 @@ Core.prompt(s:WaitForChild("SecretLever"), "Bookcase", "Lever", 0, 6).Triggered:
 
 -- painting -> attic hatch + ladder
 local painting = s:WaitForChild("Painting")
-local tilt = hinged(painting, painting.CFrame * CFrame.new(0, 2.5, 0), aroundX)
+local tilt = hinged(painting, painting.CFrame * CFrame.new(0, 2.5 * Core.S, 0), aroundX)
 local moveHatch = hinged(s:WaitForChild("Hatch"), s:WaitForChild("HatchHinge").CFrame, aroundZ)
 local ladder = s:WaitForChild("Ladder")
 local atticOpen = false
@@ -70,6 +70,38 @@ local function setAttic(open, who)
 end
 Core.prompt(painting, "Inspect", "Painting", 0.5, 7).Triggered:Connect(function(p) setAttic(not atticOpen, p.Name) end)
 Core.prompt(s:WaitForChild("AtticLever"), "Hatch", "Lever", 0, 6).Triggered:Connect(function(p) setAttic(not atticOpen, p.Name) end)
+
+-- bust: tilt the head and the fireplace slides away, revealing the bat-pole down to the cave
+local rp = Core.House:WaitForChild("Rumpus")
+local fireplace = rp:WaitForChild("Fireplace")
+local fpBase = fireplace.CFrame
+local fpDecor = {}
+for _, c in fireplace:GetDescendants() do
+	if c:IsA("BasePart") then table.insert(fpDecor, { part = c, offset = fpBase:ToObjectSpace(c.CFrame) }) end
+end
+local fpV = Instance.new("NumberValue")
+fpV.Changed:Connect(function(t)
+	local cf = fpBase + Vector3.new(0, 0, 5.5 * Core.S) * t
+	fireplace.CFrame = cf
+	for _, d in fpDecor do d.part.CFrame = cf * d.offset end
+end)
+local tiltHead = hinged(rp:WaitForChild("BustHead"), rp:WaitForChild("BustHinge").CFrame, aroundX)
+local poleOpen, poleToken = false, 0
+local function setPole(open, who)
+	if poleOpen == open then return end
+	poleOpen = open
+	poleToken += 1
+	tiltHead(open and -35 or 0, 0.6)
+	TweenService:Create(fpV, TweenInfo.new(1.8, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), { Value = open and 1 or 0 }):Play()
+	if open then
+		Core.log("Bat-pole revealed by " .. (who or "?"))
+		local my = poleToken
+		task.delay(15, function() if poleToken == my then setPole(false) end end)
+	end
+end
+local headPrompt = Core.prompt(rp.BustHead, "Tilt head", "Bust", 0.5, 6)
+headPrompt.RequiresLineOfSight = false
+headPrompt.Triggered:Connect(function(p) setPole(not poleOpen, p.Name) end)
 
 -- server rack LEDs
 local leds = CS:GetTagged("ServerLED")

@@ -12,9 +12,10 @@ local motorSound = motor:WaitForChild("MotorSound")
 local beam = g:WaitForChild("SafetyBeam")
 
 local OPEN_TIME, CLOSE_TIME, AUTO_CLOSE = 4, 9, 45
-local LIFT_OPEN = 13
-local PANEL_H = 3
-local R, YT = 1.5, 12.6           -- track bend radius and ceiling track height
+local S = Core.S
+local LIFT_OPEN = 13 * S
+local PANEL_H = 3 * S
+local R, YT = 1.5 * S, 12.6 * S   -- track bend radius and ceiling track height
 local L1 = YT - R                  -- straight vertical part
 local L2 = math.pi * R / 2         -- curved part
 
@@ -48,8 +49,8 @@ lift.Changed:Connect(function(v)
 	end
 end)
 
-local BOX_CF = origin * CFrame.new(0, 6.25, 0)
-local BOX_SIZE = Vector3.new(15.5, 11.5, 4.5)
+local BOX_CF = origin * CFrame.new(0, 6.25 * S, 0)
+local BOX_SIZE = Vector3.new(15.5, 11.5, 4.5) * S
 local token = 0
 
 local function lamp(name, on)
