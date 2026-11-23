@@ -28,7 +28,7 @@ for _, z in sec:WaitForChild("Zones"):GetChildren() do
 	flames.Lifetime = NumberRange.new(0.6, 1.4)
 	flames.Speed = NumberRange.new(4 * S, 10 * S)
 	flames.SpreadAngle = Vector2.new(15, 15)
-	flames.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 2 * S), NumberSequenceKeypoint.new(1, 0.5 * S) })
+	flames.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.4 * S), NumberSequenceKeypoint.new(1, 0.1 * S) }) -- embers; the Fire grid below is the flames
 	flames.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.1), NumberSequenceKeypoint.new(1, 1) })
 	flames.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 90)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 110, 20)), ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 20, 10)) })
 	flames.LightEmission = 1
@@ -53,7 +53,30 @@ for _, z in sec:WaitForChild("Zones"):GetChildren() do
 	glow.Enabled = false
 	glow.Parent = sheet
 
-	table.insert(rooms, { zone = z, flames = flames, smoke = smoke, glow = glow })
+	-- real flames on a grid across the floor
+	local fireList = {}
+	local step = 9 * S
+	local nx = math.max(1, math.floor(sheet.Size.X / step))
+	local nz = math.max(1, math.floor(sheet.Size.Z / step))
+	for i = 1, nx do
+		for j = 1, nz do
+			local spot = Instance.new("Part")
+			spot.Name = "FireSpot"
+			spot.Anchored, spot.CanCollide, spot.CanQuery, spot.CanTouch = true, false, false, false
+			spot.Transparency = 1
+			spot.Size = Vector3.new(0.2, 0.2, 0.2)
+			spot.CFrame = sheet.CFrame * CFrame.new((i - 0.5) / nx * sheet.Size.X - sheet.Size.X / 2, 0, (j - 0.5) / nz * sheet.Size.Z - sheet.Size.Z / 2)
+			spot.Parent = sheet
+			local f = Instance.new("Fire")
+			f.Size = 9 * S
+			f.Heat = 12
+			f.Enabled = false
+			f.Parent = spot
+			table.insert(fireList, f)
+		end
+	end
+
+	table.insert(rooms, { zone = z, flames = flames, smoke = smoke, glow = glow, fires = fireList })
 end
 
 local burning = false
@@ -63,7 +86,8 @@ local function setFire(on)
 	local area = 0
 	for _, r in rooms do
 		area = r.zone.Size.X * r.zone.Size.Z
-		r.flames.Rate = on and math.clamp(area / 4, 80, 400) or 0
+		r.flames.Rate = on and math.clamp(area / 20, 20, 120) or 0
+		for _, f in r.fires do f.Enabled = on end
 		r.smoke.Rate = on and 20 or 0
 		r.glow.Enabled = on
 	end
